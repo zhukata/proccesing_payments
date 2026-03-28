@@ -48,7 +48,12 @@ class PaymentResponse(BaseModel):
     amount: Decimal = Field(description="Сумма платежа")
     currency: str = Field(description="Валюта платежа")
     description: str | None = Field(None, description="Описание платежа")
-    metadata: dict | None = Field(None, description="Метаданные платежа")
+    metadata: dict | None = Field(
+        None,
+        description="Метаданные платежа",
+        validation_alias="metadata_json",
+        serialization_alias="metadata",
+    )
     webhook_url: HttpUrl = Field(description="URL для вебхука")
     status: PaymentStatus = Field(description="Статус платежа")
     created_at: datetime = Field(description="Дата создания")

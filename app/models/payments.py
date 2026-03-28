@@ -59,10 +59,5 @@ class Payment(Base):
         nullable=True,
     )
 
-    @property
-    def metadata(self) -> dict | None:
-        """Convenience alias to expose metadata JSON under spec name."""
-        return self.metadata_json
-
     def __repr__(self) -> str:
         return f"<Payment {self.id} status={self.status}>"
