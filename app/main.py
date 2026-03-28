@@ -19,9 +19,9 @@ from app.services.outbox import outbox_dispatcher
 async def lifespan(app: FastAPI):
     await broker.connect()
     await broker.declare_exchange(payments_exchange)
-    await broker.declare_queue(payments_queue)
     await broker.declare_exchange(dead_letter_exchange)
     await broker.declare_queue(dead_letter_queue)
+    await broker.declare_queue(payments_queue)
     dispatcher = asyncio.create_task(outbox_dispatcher())
     try:
         yield
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
         dispatcher.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await dispatcher
-        await broker.close()
+        await broker.stop()
 
 
 app = FastAPI(title="Processing Payments API", lifespan=lifespan)

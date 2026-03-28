@@ -17,14 +17,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    payment_status = postgresql.ENUM(
-        "pending",
-        "succeeded",
-        "failed",
-        name="payment_status",
-    )
-    payment_status.create(op.get_bind(), checkfirst=True)
-
     op.create_table(
         "payments",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
@@ -34,7 +26,12 @@ def upgrade() -> None:
         sa.Column("description", sa.String(length=500), nullable=True),
         sa.Column("metadata", sa.JSON(), nullable=True),
         sa.Column("webhook_url", sa.String(length=500), nullable=False),
-        sa.Column("status", payment_status, nullable=False, server_default="pending"),
+        sa.Column(
+            "status",
+            sa.Enum("pending", "succeeded", "failed", name="payment_status", native_enum=False),
+            nullable=False,
+            server_default="pending",
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("processed_at", sa.DateTime(timezone=True), nullable=True),
     )
@@ -56,5 +53,3 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_outbox_created_at"), table_name="outbox")
     op.drop_table("outbox")
     op.drop_table("payments")
-    payment_status = postgresql.ENUM(name="payment_status")
-    payment_status.drop(op.get_bind(), checkfirst=True)
