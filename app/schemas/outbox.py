@@ -20,6 +20,7 @@ class OutboxPayload(BaseModel):
     status: str = Field(description="Статус платежа (после обработки)")
     amount: float | None = Field(None, description="Сумма платежа")
     currency: str | None = Field(None, description="Валюта")
+    description: str | None = Field(None, description="Описание платежа")
     error_message: str | None = Field(None, description="Сообщение об ошибке")
 
     model_config = {
@@ -30,6 +31,7 @@ class OutboxPayload(BaseModel):
                 "status": "succeeded",
                 "amount": 1000.50,
                 "currency": "RUB",
+                "description": "Оплата заказа #12345",
                 "error_message": None,
             }
         }

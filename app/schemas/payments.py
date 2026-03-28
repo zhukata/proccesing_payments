@@ -34,12 +34,12 @@ class PaymentCreate(BaseModel):
         examples=["https://example.com/webhook"],
     )
 
-    @field_validator
+    @field_validator("currency")
     @classmethod
     def validate_currency(cls, value: str) -> str:
         allowed = {"RUB", "USD", "EUR"}
         if value not in allowed:
-            raise ValueError(f"Currency ,ust be one of {allowed}")
+            raise ValueError(f"Currency must be one of {allowed}")
         return value
 
 

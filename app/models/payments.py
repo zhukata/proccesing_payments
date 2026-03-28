@@ -3,14 +3,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from uuid import uuid4
 
-from sqlalchemy import (
-    JSON,
-    DateTime,
-    Enum,
-    Numeric,
-    String,
-    func,
-)
+from sqlalchemy import JSON, DateTime, Enum, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -41,27 +34,16 @@ class Payment(Base):
         nullable=False,
         index=True,
     )
-    amount: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2),
-        nullable=False,
-    )
-    currency: Mapped[str] = mapped_column(
-        String(3),
-        nullable=False,
-    )
-    description: Mapped[str | None] = mapped_column(
-        String(500),
-        nullable=True,
-    )
-    metadata: Mapped[dict | None] = mapped_column(
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    metadata_json: Mapped[dict | None] = mapped_column(
+        "metadata",
         JSON,
         nullable=True,
         default=None,
     )
-    webhook_url: Mapped[str] = mapped_column(
-        String(500),
-        nullable=False,
-    )
+    webhook_url: Mapped[str] = mapped_column(String(500), nullable=False)
     status: Mapped[PaymentStatus] = mapped_column(
         Enum(PaymentStatus, name="payment_status"),
         nullable=False,
@@ -76,6 +58,11 @@ class Payment(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+
+    @property
+    def metadata(self) -> dict | None:
+        """Convenience alias to expose metadata JSON under spec name."""
+        return self.metadata_json
 
     def __repr__(self) -> str:
         return f"<Payment {self.id} status={self.status}>"
