@@ -2,9 +2,6 @@ from faststream.rabbit import RabbitBroker, RabbitExchange, RabbitQueue
 
 from app.core.config import settings
 
-
-
-
 payments_exchange = RabbitExchange(
     settings.PAYMENTS_EXCHANGE,
     durable=True,

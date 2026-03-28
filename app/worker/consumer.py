@@ -54,9 +54,11 @@ async def process_payment(message: dict, msg: RabbitMessage):
         webhook_payload = {
             "payment_id": str(payment_id),
             "status": status.value,
-            "amount": float(message.get("amount"))
-            if message.get("amount") is not None
-            else None,
+            "amount": (
+                float(message.get("amount"))
+                if message.get("amount") is not None
+                else None
+            ),
             "currency": message.get("currency"),
             "description": updated.description if updated else None,
             "error_message": None if succeeded else "Processing error",
@@ -72,7 +74,7 @@ async def process_payment(message: dict, msg: RabbitMessage):
         if attempt >= 2:
             await msg.reject(requeue=False)
         else:
-            await asyncio.sleep(2 ** attempt)
+            await asyncio.sleep(2**attempt)
             # requeue with incremented retry counter
             await broker.publish(
                 message, queue=settings.PAYMENTS_QUEUE, headers={"x-retry": attempt + 1}

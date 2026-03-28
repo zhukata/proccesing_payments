@@ -55,9 +55,7 @@ class PaymentRepository:
         if processed_at:
             values["processed_at"] = processed_at
         await self.session.execute(
-            update(Payment)
-            .where(Payment.id == payment_id)
-            .values(**values)
+            update(Payment).where(Payment.id == payment_id).values(**values)
         )
         await self.session.commit()
         return await self.get_by_id(payment_id)

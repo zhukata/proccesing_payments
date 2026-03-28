@@ -11,13 +11,14 @@ from app.repositories.payments import PaymentRepository
 from app.schemas.outbox import OutboxPayload
 from app.schemas.payments import PaymentCreate, PaymentResponse
 
-
 router = APIRouter(
     prefix="/api/v1", tags=["payments"], dependencies=[Depends(verify_api_key)]
 )
 
 
-@router.post("/payments", status_code=status.HTTP_202_ACCEPTED, response_model=PaymentResponse)
+@router.post(
+    "/payments", status_code=status.HTTP_202_ACCEPTED, response_model=PaymentResponse
+)
 async def create_payment(
     payment: PaymentCreate,
     session: AsyncSession = Depends(get_db),
@@ -56,7 +57,9 @@ async def get_payment(payment_id: str, db: AsyncSession = Depends(get_db)):
     try:
         pid = UUID(payment_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid payment_id format") from None
+        raise HTTPException(
+            status_code=400, detail="Invalid payment_id format"
+        ) from None
 
     repo = PaymentRepository(db)
     payment = await repo.get_by_id(pid)

@@ -1,17 +1,15 @@
 import asyncio
-from typing import Awaitable, Callable
 
 from loguru import logger
 
-from app.core.broker import PAYMENTS_QUEUE, broker
+from app.core.broker import broker
 from app.core.database import AsyncSessionLocal
+from app.core.config import settings
 from app.repositories.outbox import OutboxRepository
-
-PublishFunc = Callable[[dict], Awaitable[None]]
 
 
 async def publish_event(payload: dict) -> None:
-    await broker.publish(payload, queue=PAYMENTS_QUEUE)
+    await broker.publish(payload, queue=settings.PAYMENTS_QUEUE)
 
 
 async def outbox_dispatcher(poll_interval: float = 1.0) -> None:
