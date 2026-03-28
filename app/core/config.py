@@ -1,10 +1,9 @@
-from pika import ConnectionParameters, PlainCredentials
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     API_KEY: str
-    
+
     DB_HOST: str
     DB_PORT: int
     DB_USER: str
@@ -20,13 +19,14 @@ class Settings(BaseSettings):
     RMQ_USER: str
     RMQ_PASSWORD: str
 
+    PAYMENTS_EXCHANGE: str = "payments"
+    PAYMENTS_QUEUE: str = "payments.new"
+    DLX_NAME: str = "payments.dlx"
+    DLQ_NAME: str = "payments.dead"
+
     @property
-    def CONNECTION_PARAMETERS(self) -> ConnectionParameters:
-        return ConnectionParameters(
-            host=self.RMQ_HOST,
-            port=self.RMQ_PORT,
-            credentials=PlainCredentials(self.RMQ_USER, self.RMQ_PASSWORD),
-        )
+    def RMQ_DSN(self) -> str:
+        return f"amqp://{self.RMQ_USER}:{self.RMQ_PASSWORD}@{self.RMQ_HOST}:{self.RMQ_PORT}/"
 
     class Config:
         env_file = ".env"
