@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_idempotency_key, verify_api_key
@@ -28,12 +29,16 @@ async def create_payment(
     async with session.begin():
         existing = await repo.get_by_idempotency_key(idempotency_key)
         if existing:
+            logger.info(
+                "Idempotent hit: payment reused idempotency_key={}", idempotency_key
+            )
             return PaymentResponse.model_validate(existing)
 
         created = await repo.create_payment(
             payload=payment,
             idempotency_key=idempotency_key,
         )
+        logger.info("Payment created id={} ikey={}", created.id, idempotency_key)
 
         outbox_repo = OutboxRepository(session)
         await outbox_repo.add_event(
@@ -48,6 +53,7 @@ async def create_payment(
                 error_message=None,
             ).model_dump(mode="json"),
         )
+        logger.info("Outbox event enqueued for payment id={}", created.id)
 
     return PaymentResponse.model_validate(created)
 

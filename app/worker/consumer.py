@@ -6,6 +6,7 @@ from uuid import UUID
 import httpx
 from faststream import FastStream
 from faststream.rabbit import RabbitMessage
+from loguru import logger
 
 from app.core.broker import broker, payments_queue
 from app.core.database import AsyncSessionLocal
@@ -23,10 +24,16 @@ async def send_webhook(url: str, payload: dict, attempts: int = 3) -> bool:
             try:
                 response = await client.post(url, json=payload)
                 if response.status_code < 400:
+                    logger.info(
+                        "Webhook delivered url={} status={} attempt={}",
+                        url,
+                        response.status_code,
+                        attempt + 1,
+                    )
                     return True
             except Exception:
                 # swallow and retry
-                pass
+                logger.warning("Webhook attempt {} failed url={}", attempt + 1, url)
             await asyncio.sleep(delay)
             delay *= 2
     return False
@@ -50,6 +57,12 @@ async def process_payment(message: dict, msg: RabbitMessage):
                 payment_id, status=status, processed_at=processed_at
             )
             updated = await repo.get_by_id(payment_id)
+            logger.info(
+                "Processed payment id={} status={} attempt={}",
+                payment_id,
+                status.value,
+                attempt + 1,
+            )
 
         webhook_payload = {
             "payment_id": str(payment_id),
@@ -72,11 +85,16 @@ async def process_payment(message: dict, msg: RabbitMessage):
         await msg.ack()
     except Exception:
         if attempt >= 2:
+            logger.error(
+                "Message failed after retries payment_id={} sending to DLQ", payment_id
+            )
             await msg.reject(requeue=False)
         else:
             await asyncio.sleep(2**attempt)
             # requeue with incremented retry counter
             await broker.publish(
-                message, queue=settings.PAYMENTS_QUEUE, headers={"x-retry": attempt + 1}
+                message,
+                queue=settings.PAYMENTS_QUEUE,
+                headers={"x-retry": attempt + 1},
             )
             await msg.ack()

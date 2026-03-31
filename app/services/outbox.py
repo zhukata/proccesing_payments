@@ -22,6 +22,7 @@ async def outbox_dispatcher(poll_interval: float = 1.0) -> None:
                 for event in events:
                     try:
                         await publish_event(event.payload)
+                        logger.info("Outbox published event id={}", event.id)
                     except Exception as exc:  # noqa: BLE001
                         logger.warning(
                             "Outbox publish failed for id={} error={}",

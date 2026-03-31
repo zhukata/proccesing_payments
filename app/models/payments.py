@@ -45,7 +45,12 @@ class Payment(Base):
     )
     webhook_url: Mapped[str] = mapped_column(String(500), nullable=False)
     status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus, name="payment_status"),
+        Enum(
+            PaymentStatus,
+            name="payment_status",
+            values_callable=lambda x: [e.value for e in x],
+            native_enum=False,
+        ),
         nullable=False,
         default=PaymentStatus.PENDING,
     )
